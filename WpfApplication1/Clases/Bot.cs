@@ -19,9 +19,9 @@ namespace IpScanApp.Clases
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         IpAddress IpBegin;
-        IpAddress IpFinal = new IpAddress(Globals.IpEnd);
-        //IpAddress Ip= new IpAddress(Globals.IpStart);
-        //IpAddress IpEnd = new IpAddress(Globals.IpEnd);
+        //IpAddress IpFinal = new IpAddress(Globals.IpEnd);
+        IpAddress Ip = new IpAddress(Globals.IpStart);
+        IpAddress IpEnd = new IpAddress(Globals.IpEnd);
         public int Port = 80;
         public bool Stop = false;
         public string Query { get; set; }
@@ -108,8 +108,8 @@ namespace IpScanApp.Clases
 
         public void Run()
         {
-            IpAddress Ip = IpBegin;
-            IpAddress IpEnd = Ip.Increment(65535);
+            //IpAddress Ip = IpBegin;
+            //IpAddress IpEnd = Ip.Increment(65535);
             try
             {
                 log.Info("Start " + Manufacturer + " Ip:" + Ip  + " Port:" + Port);
