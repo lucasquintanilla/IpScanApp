@@ -115,6 +115,8 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="Resources\ip_range_argentina.csv" />
+    <None Include="Resources\ip_range_argentina.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

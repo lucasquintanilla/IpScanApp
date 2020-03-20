@@ -21,7 +21,8 @@
             <TextBlock x:Name="txt_TcpConnections" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="150"/>
             <Button x:Name="btnTcpConnections" Content="TCP Connections" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="150" Click="btnTcpConnections_Click" Height="30"/>
             <Button x:Name="btn_RescanExistingCams" Content="Rescan Existing Cams" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="30" Click="btn_RescanExistingCams_Click"/>
-            
+            <Button x:Name="btnAsyncNewvision" Content="Async Newvision" Click="BtnAsyncNewvision_Click"/>
+
         </StackPanel>
         </Grid>
 </Window>

