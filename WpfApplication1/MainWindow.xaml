@@ -23,6 +23,8 @@
             <Button x:Name="btnAsyncScan" Content="Async Scan" Click="btnAsyncScan_Click"/>
             <Button x:Name="btnScanRange" Content="Scan Range" Click="btnScanRange_Click"/>
             <Button x:Name="btnScanSavedCameras" Content="Scan Saved Cameras" Click="btnScanSavedCameras_Click"/>
+            <Button x:Name="btnDeepScan" Content="Deep Scan Cameras" Click="btnDeepScan_Click"/>
+            <Button x:Name="btnCheckOpenPorts" Content="Check Open Ports" Click="btnCheckOpenPorts_Click"/>
         </StackPanel>
         </Grid>
 </Window>

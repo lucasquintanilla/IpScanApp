@@ -16,30 +16,27 @@ namespace IpScanApp.Clases
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         
         private string uri;
-        private ICredentials credentials;
         private string manufacturer;
         private string username;
-        private string password;        
+        private string password;
+        private ICredentials credentials;
         private bool stop = false;
         private const string Jpeg = "image/jpeg";
-        private int timeout = 2000;
-        private int port;
+        private int timeout = 2000;        
 
-        public Bot(string manufacturer, string uri, string username, string password, int port = 80)
+        public Bot(string manufacturer, string uri, string username, string password)
         {
             this.manufacturer = manufacturer;
             this.uri = uri;
             this.username = username;
             this.password = password;
-            this.credentials = new NetworkCredential(username, password);
-            this.port = port;
+            this.credentials = new NetworkCredential(username, password);            
         }
 
-        public Bot(string manufacturer, string uri, int port = 80)
+        public Bot(string manufacturer, string uri)
         {
             this.manufacturer = manufacturer;
             this.uri = uri;
-            this.port = port;
         }
         
         public static void ShowActiveTcpConnections()
@@ -55,8 +52,13 @@ namespace IpScanApp.Clases
             //                      c.RemoteEndPoint.ToString());
             //}
         }
-        
-        public void ScanRange(IpAddress ipAddressBegin, IpAddress ipAddressEnd)
+
+        public void Stop()
+        {
+            this.stop = true;
+        }
+
+        public void ScanRange(IpAddress ipAddressBegin, IpAddress ipAddressEnd, int port = 80)
         {
             var ip = ipAddressBegin;
                            
@@ -95,12 +97,27 @@ namespace IpScanApp.Clases
             {
                 if (!string.IsNullOrEmpty(ipAddress) && ipAddress.Length > 0)
                 {
-                    IsCamera(ipAddress);
+                    if (IsCamera(ipAddress))
+                    { 
+                        SaveCamera(ipAddress, this.manufacturer);
+                    }
                 }
             }
+
+            Console.WriteLine("DONE!");
         }
-        
-        public void AsyncScanFrom(IpAddress ipAddress)
+
+        public void DeepScan(int[] ports)
+        {
+            foreach (var port in ports)
+            {                
+                AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255"), port);
+            }
+
+            Console.WriteLine("DEEP SCAN DONE!");
+        }
+
+        public void AsyncScanFrom(IpAddress ipAddress, int port = 80)
         {
             while (!stop)
             {
@@ -111,10 +128,8 @@ namespace IpScanApp.Clases
                 while (ipAddress.CompareTo(holdingpoint) == -1)
                 {                    
                     try
-                    {                        
-                        Console.WriteLine(ipAddress);
-
-                        AsyncScan(ipAddress);
+                    {
+                        AsyncScan(ipAddress, port);
 
                         ipAddress = ipAddress.Increment(1);
                     }
@@ -138,7 +153,7 @@ namespace IpScanApp.Clases
             Console.WriteLine("DONE!");
         }
 
-        public void AsyncScanRange(IpAddress ipAddressBegin, IpAddress ipAddressEnd)
+        public void AsyncScanRange(IpAddress ipAddressBegin, IpAddress ipAddressEnd, int port = 80)
         {
             IpAddress ip = ipAddressBegin;
 
@@ -146,11 +161,12 @@ namespace IpScanApp.Clases
             {
                 var holdingpoint = ip.Increment(255 * 5); //HOLDINGPOINT ES UN PUNTO DE ESPERA PARA RECIBIR PAQUETES ENVIADOS
 
-                while (ip.CompareTo(holdingpoint) == -1)
+                while (ip.CompareTo(holdingpoint) == -1) //Agregar comparacion con ipend, porque sigue un poco de largo.
                 {
                     try
                     {
-                        AsyncScan(ip);
+                        Console.WriteLine(ip);
+                        AsyncScan(ip, port);
 
                         ip = ip.Increment(1);
                     }
@@ -174,7 +190,41 @@ namespace IpScanApp.Clases
             Console.WriteLine("DONE!");
         }
 
-        private void IsCamera(string ipAddress, int port)
+        private void AsyncScan(IpAddress ipAddress, int port)
+        {
+            int timeout = 4000;
+
+            RestClient client = new RestClient($"http://{ipAddress}:{port}");
+            client.Timeout = timeout;
+            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
+            RestRequest request = new RestRequest(this.uri, Method.GET);
+            request.Credentials = this.credentials; //solo newvision & dahua
+
+            client.ExecuteAsync(request, response =>
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    Console.WriteLine(response.ResponseUri.Host + " OK");
+
+                    if (IsCamera(response.ResponseUri.Host, response.ResponseUri.Port))
+                    {
+
+                        if (!string.IsNullOrEmpty(this.username) && !string.IsNullOrEmpty(this.password))
+                        {
+                            Process.Start("firefox.exe", $"http://{this.username}:{this.password}@{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
+                        }
+                        else
+                        {
+                            Process.Start("firefox.exe", $"http://{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
+                        }
+
+                        SaveCamera(response.ResponseUri.Host, response.ResponseUri.Port, this.manufacturer);
+                    }
+                }
+            });
+        }
+
+        private bool IsCamera(string ipAddress, int port)
         {            
             RestClient client = new RestClient($"http://{ipAddress}:{port}");
             client.Timeout = 10000;
@@ -186,20 +236,13 @@ namespace IpScanApp.Clases
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
             {
-                if (!string.IsNullOrEmpty(this.username) && !string.IsNullOrEmpty(this.password))
-                {
-                    Process.Start("firefox.exe", $"http://{this.username}:{this.password}@{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
-                }
-                else
-                {                    
-                    Process.Start("firefox.exe", $"http://{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
-                }
-                
-                SaveCamera(response.ResponseUri.Host, response.ResponseUri.Port, this.manufacturer);
+                return true;
             }
+
+            return false;
         }
 
-        private void IsCamera(string ipAddress)
+        private bool IsCamera(string ipAddress)
         {
             RestClient client = new RestClient($"http://{ipAddress}");
             client.Timeout = 10000;
@@ -211,17 +254,10 @@ namespace IpScanApp.Clases
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
             {
-                if (!string.IsNullOrEmpty(this.username) && !string.IsNullOrEmpty(this.password))
-                {
-                    Process.Start("firefox.exe", $"http://{this.username}:{this.password}@{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
-                }
-                else
-                {
-                    Process.Start("firefox.exe", $"http://{response.ResponseUri.Host}:{response.ResponseUri.Port}{this.uri}");
-                }
-
-                SaveCamera(response.ResponseUri.Host, response.ResponseUri.Port, this.manufacturer);
+                return true;
             }
+
+            return false;
         }
 
         private void SaveCamera(string ipAddress, int port, string manufacturer)
@@ -251,47 +287,38 @@ namespace IpScanApp.Clases
                         }
                     }
                 }
-
-                //if (File.Exists(filename))
-                //{
-                //    var file = File.ReadAllText(filename);
-
-                //    if (!file.Contains(ip))
-                //    {
-                //        using (StreamWriter txt = new StreamWriter(filename, true))
-                //        {
-
-                //            if (port == 80)
-                //            {
-                //                txt.WriteLine(ip);
-                //            }
-                //            else
-                //            {
-                //                txt.WriteLine(ip + ":" + port);
-                //            }
-                //        }
-                //    }
-                //}
-                //else
-                //{
-                //    File.Create(filename).Close();
-                //    using (StreamWriter txt = new StreamWriter(filename, true))
-                //    {
-                //        if (port == 80)
-                //        {
-                //            txt.WriteLine(ip);
-                //        }
-                //        else
-                //        {
-                //            txt.WriteLine(ip + ":" + port);
-                //        }
-                //    }
-                //}
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }            
+        }
+
+        private void SaveCamera(string ipAddress, string manufacturer)
+        {
+            try
+            {
+                string filename = $"{manufacturer}.txt";
+
+                if (!File.Exists(filename))
+                {
+                    File.Create(filename).Close();
+                }
+
+                var file = File.ReadAllText(filename);
+
+                if (!file.Contains(ipAddress))
+                {
+                    using (StreamWriter txt = new StreamWriter(filename, true))
+                    {
+                        txt.WriteLine(ipAddress);                        
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         private List<IpRange> GetIpRanges()
@@ -318,31 +345,6 @@ namespace IpScanApp.Clases
             }
 
             return ipRanges;
-
-            //foreach (var ipRange in ipRanges)
-            //{
-            //    Console.WriteLine($"{ipRange.IpBegin} - {ipRange.IpEnd}");
-            //}
-        }
-
-        private void AsyncScan(IpAddress ipAddress)
-        {            
-            int timeout = 4000;
-
-            RestClient client = new RestClient($"http://{ipAddress}:{port}");            
-            client.Timeout = timeout;
-            client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
-            RestRequest request = new RestRequest(this.uri, Method.GET);
-            request.Credentials = this.credentials; //solo newvision & dahua
-
-            client.ExecuteAsync(request, response =>
-            {
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    Console.WriteLine(response.ResponseUri.Host);                    
-                    IsCamera(response.ResponseUri.Host, response.ResponseUri.Port);
-                }
-            });
         }
     }    
 }

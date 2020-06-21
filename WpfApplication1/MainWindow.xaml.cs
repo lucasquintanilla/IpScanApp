@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -275,18 +276,16 @@ namespace WpfApplication1
         private void SaveConfiguration()
         {
             Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-
-            //Guardo datos introducidos en los textinput
+            
             config.AppSettings.Settings["IpStart"].Value = txt_IpStart.Text;
             config.AppSettings.Settings["IpEnd"].Value = txt_IpEnd.Text;
         }        
 
         private void LoadConfiguration()
-        {
-            //Tomo los datos guardados y los muestro en los textinput
+        {            
             txt_IpStart.Text = ConfigurationManager.AppSettings["IpStart"];
             txt_IpEnd.Text = ConfigurationManager.AppSettings["IpEnd"];
-        }
+        }        
 
         private void btnTcpConnections_Click(object sender, RoutedEventArgs e)
         {
@@ -319,14 +318,14 @@ namespace WpfApplication1
         
         private void btnReadData_Click(object sender, RoutedEventArgs e)
         {
-            var ipRange = GetIpRanges()[0];
+            //var ipRange = GetIpRanges()[0];
 
-            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
+            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
 
-            //foreach (var ipRange in GetIpRanges())
-            //{
-            //    new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
-            //}
+            foreach (var ipRange in GetIpRanges())
+            {
+                new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd);
+            }
         }
 
         private void btnAsyncScan_Click(object sender, RoutedEventArgs e)
@@ -336,13 +335,92 @@ namespace WpfApplication1
         }
 
         private void btnScanRange_Click(object sender, RoutedEventArgs e)
-        {            
-            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255"))).Start();
+        {
+            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1")
+                .AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255"), 60001))
+                .Start();
+
+            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
+            //    .AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255")))
+            //    .Start();
         }
 
         private void btnScanSavedCameras_Click(object sender, RoutedEventArgs e)
         {
             RescanSavedCameras("newvision.txt");
+        }
+
+        private void btnDeepScan_Click(object sender, RoutedEventArgs e)
+        {
+            int[] ports = new int[]{ 81, 82, 83 };
+
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
+                .DeepScan(ports))
+                .Start();
+        }
+
+        private void btnCheckOpenPorts_Click(object sender, RoutedEventArgs e)
+        {
+            GetOpenPorts("https://190.190.249.152");
+            Console.WriteLine("DONE!");
+        }
+
+        private List<int> GetOpenPorts(string hostname)
+        {            
+            int[] ports = new int[] { 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90 };
+
+            List<int> openPorts = new List<int>();
+
+            foreach (var port in ports)
+            {
+                if (IsPortOpen(hostname, port, 2))
+                {
+                    Console.WriteLine($"Abierto: {port}");
+                    openPorts.Add(port);
+                }
+            }
+
+            return openPorts;
+        }
+
+        private bool IsPortOpen(string hostname, int port, int timeout)
+        {
+            var result = false;
+            using (var client = new TcpClient())
+            {
+                try
+                {
+                    client.ReceiveTimeout = timeout * 1000;
+                    client.SendTimeout = timeout * 1000;
+                    var asyncResult = client.BeginConnect(hostname, port, null, null);
+                    var waitHandle = asyncResult.AsyncWaitHandle;
+                    try
+                    {
+                        if (!asyncResult.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(timeout), false))
+                        {
+                            // wait handle didn't came back in time
+                            client.Close();
+                        }
+                        else
+                        {
+                            // The result was positiv
+                            result = client.Connected;
+                        }
+                        // ensure the ending-call
+                        client.EndConnect(asyncResult);
+                    }
+                    finally
+                    {
+                        // Ensure to close the wait handle.
+                        waitHandle.Close();
+                    }
+                }
+                catch (Exception)
+                {
+
+                }
+            }
+            return result;
         }
     }
 }
