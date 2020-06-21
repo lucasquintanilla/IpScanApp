@@ -40,8 +40,8 @@ namespace IpScanApp.Clases
             this.manufacturer = manufacturer;
             this.uri = uri;
             this.port = port;
-        }        
-       
+        }
+        
         public static void ShowActiveTcpConnections()
         {
             //Console.WriteLine("Active TCP Connections");
@@ -55,74 +55,12 @@ namespace IpScanApp.Clases
             //                      c.RemoteEndPoint.ToString());
             //}
         }
-
-        public void Update()
+        
+        public void ScanRange(IpAddress ipAddressBegin, IpAddress ipAddressEnd)
         {
-            // Read a text file line by line.
-            string[] lines = File.ReadAllLines(this.manufacturer + ".txt");
-
-            foreach (string ipAddress in lines)
-            {
-                if (ipAddress != null & ipAddress.Length > 1)
-                {
-                    try
-                    {
-                        string BaseUrl = "http://" + ipAddress;
-                        RestClient client = new RestClient(BaseUrl);
-                        client.Timeout = timeout;
-                        client.FollowRedirects = false; //Cuando una petición devuelve una respuesta de tipo redirección, el cliente no la sigue automáticamente.
-                        RestRequest request = new RestRequest(this.uri, Method.GET);
-                        request.Credentials = this.credentials; //solo newvision  
-                        IRestResponse response = client.Execute(request);
-                        string file = "";
-                        if (response.StatusCode == System.Net.HttpStatusCode.OK && response.ContentType == Jpeg)
-                        {
-                            Console.WriteLine(response.ResponseUri.Host + " " + this.manufacturer + " Actualizado");
-                            string FileName = this.manufacturer + ".new.txt";
-                            if (File.Exists(FileName))
-                            {
-
-                                file = File.ReadAllText(FileName);
-                            }
-                            else
-                            {
-                                var FileCreado = File.Create(FileName);
-                                FileCreado.Close();
-                            }
-
-                            if (!file.Contains(response.ResponseUri.Host))
-                            {
-                                using (StreamWriter txt = new StreamWriter(FileName, true))
-                                {
-
-                                    if (response.ResponseUri.Port == 80)
-                                    {
-                                        txt.WriteLine(response.ResponseUri.Host);
-                                    }
-                                    else
-                                    {
-                                        txt.WriteLine(response.ResponseUri.Host + ":" + response.ResponseUri.Port);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ipAddress + ex.Message);
-                    }
-                }
-            }
-
-            Console.WriteLine("Done!");
-        }
-
-        public void ScanRange(string ipAddressBegin, string ipAddressEnd)
-        {
-            var ip = new IpAddress(ipAddressBegin);
-            var end = new IpAddress(ipAddressEnd);
+            var ip = ipAddressBegin;
                            
-            while (ip.CompareTo(end) == -1)
+            while (ip.CompareTo(ipAddressEnd) == -1)
             {
                 try
                 {
@@ -162,25 +100,23 @@ namespace IpScanApp.Clases
             }
         }
         
-        public void AsyncScanFrom(string ipAddress)
+        public void AsyncScanFrom(IpAddress ipAddress)
         {
-            IpAddress ip = new IpAddress(ipAddress);
-
             while (!stop)
             {
                 Console.WriteLine("start");
 
-                var holdingpoint = ip.Increment(255 * 5); //ESTABLECE UNA IP DE ESPERA PARA MEJORAR EL RENDIMIENTO
+                var holdingpoint = ipAddress.Increment(255 * 5); //ESTABLECE UNA IP DE ESPERA PARA MEJORAR EL RENDIMIENTO
 
-                while (ip.CompareTo(holdingpoint) == -1)
+                while (ipAddress.CompareTo(holdingpoint) == -1)
                 {                    
                     try
                     {                        
-                        Console.WriteLine(ip);
+                        Console.WriteLine(ipAddress);
 
-                        AsyncScan(ip);
+                        AsyncScan(ipAddress);
 
-                        ip = ip.Increment(1);
+                        ipAddress = ipAddress.Increment(1);
                     }
                     catch (Exception ex)
                     {
@@ -288,7 +224,7 @@ namespace IpScanApp.Clases
             }
         }
 
-        private void SaveCamera(string ip, int port, string manufacturer)
+        private void SaveCamera(string ipAddress, int port, string manufacturer)
         {
             try
             {
@@ -301,17 +237,17 @@ namespace IpScanApp.Clases
 
                 var file = File.ReadAllText(filename);
 
-                if (!file.Contains(ip))
+                if (!file.Contains(ipAddress))
                 {
                     using (StreamWriter txt = new StreamWriter(filename, true))
                     {
                         if (port == 80)
                         {
-                            txt.WriteLine(ip);
+                            txt.WriteLine(ipAddress);
                         }
                         else
                         {                            
-                            txt.WriteLine($"{ip}:{port}");
+                            txt.WriteLine($"{ipAddress}:{port}");
                         }
                     }
                 }
@@ -389,11 +325,11 @@ namespace IpScanApp.Clases
             //}
         }
 
-        private void AsyncScan(IpAddress ip)
+        private void AsyncScan(IpAddress ipAddress)
         {            
             int timeout = 4000;
 
-            RestClient client = new RestClient($"http://{ip}:{port}");            
+            RestClient client = new RestClient($"http://{ipAddress}:{port}");            
             client.Timeout = timeout;
             client.FollowRedirects = false; //Si una petición devuelve una respuesta de tipo redirección, no lo redirecciona a otra web.
             RestRequest request = new RestRequest(this.uri, Method.GET);

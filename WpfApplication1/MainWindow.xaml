@@ -12,18 +12,17 @@
             <RowDefinition/>            
         </Grid.RowDefinitions>
         <StackPanel Grid.Column="1">
-            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top"><Run Language="es-ar" Text="IP inicial"/></TextBlock>
-            <TextBox x:Name="txt_IpStart" HorizontalAlignment="Left" Height="30"  TextWrapping="Wrap" VerticalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Left" Width="150" Text="152.170.0.0"/>
-            <TextBlock HorizontalAlignment="Left"  TextWrapping="Wrap" Text="IP final" VerticalAlignment="Top"/>
-            <TextBox x:Name="txt_IpEnd" HorizontalAlignment="Left" Height="30"  TextWrapping="Wrap" VerticalAlignment="Top" Width="150" VerticalContentAlignment="Center" Text="152.174.255.255"/>
+            <Label Content="Ip Address Begin"/>
+            <TextBox x:Name="txt_IpStart" HorizontalAlignment="Left" Height="30"  TextWrapping="Wrap" VerticalAlignment="Center" VerticalContentAlignment="Center" TextAlignment="Left" Width="150"/>
+            <Label Content="Ip Address End"/>
+            <TextBox x:Name="txt_IpEnd" HorizontalAlignment="Left" Height="30"  TextWrapping="Wrap" VerticalAlignment="Top" Width="150" VerticalContentAlignment="Center"/>
+            <Label Content="TCP Active Connections"/>
             <TextBlock x:Name="txt_TcpConnections" HorizontalAlignment="Left" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="150"/>
             <Button x:Name="btnTcpConnections" Content="TCP Connections" HorizontalAlignment="Left"  VerticalAlignment="Top" Width="150" Click="btnTcpConnections_Click" Height="30"/>
-            <Button x:Name="btn_RescanExistingCams" Content="Rescan Existing Cams" HorizontalAlignment="Left" VerticalAlignment="Top" Width="150" Height="30" Click="btn_RescanExistingCams_Click"/>
             <Button x:Name="btnReadData" Content="Read Excel" Click="btnReadData_Click"/>
             <Button x:Name="btnAsyncScan" Content="Async Scan" Click="btnAsyncScan_Click"/>
             <Button x:Name="btnScanRange" Content="Scan Range" Click="btnScanRange_Click"/>
             <Button x:Name="btnScanSavedCameras" Content="Scan Saved Cameras" Click="btnScanSavedCameras_Click"/>
-
         </StackPanel>
         </Grid>
 </Window>

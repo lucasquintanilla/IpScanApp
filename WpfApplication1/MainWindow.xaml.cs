@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
@@ -20,14 +21,12 @@ namespace WpfApplication1
         {
             InitializeComponent();
 
-            //Tomo los datos guardados y los muestro en los textinput
-            txt_IpStart.Text = ConfigurationManager.AppSettings["IpStart"];
-            txt_IpEnd.Text = ConfigurationManager.AppSettings["IpEnd"];
+            LoadConfiguration();
         }        
         
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
                 
-        private void FilterIp(string ip)
+        private void ClassifyIp(string ip)
         {
             try
             {
@@ -228,25 +227,66 @@ namespace WpfApplication1
             }
         }                
 
-        private void SetConfiguration()
+        private List<string> SortIps(string[] unsortedIps)
         {
-            try
-            {
-                Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            //var unsortedIps =
+            //    new[]
+            //    {
+            //        "192.168.1.4",
+            //        "192.168.1.5",
+            //        "192.168.2.1",
+            //        "10.152.16.23",
+            //        "69.52.220.44"
+                //};
 
-                //Guardo datos introducidos en los textinput
-                config.AppSettings.Settings["IpStart"].Value = txt_IpStart.Text;
-                config.AppSettings.Settings["IpEnd"].Value = txt_IpEnd.Text;
+            return unsortedIps
+                .Select(Version.Parse)
+                .OrderBy(arg => arg)
+                .Select(arg => arg.ToString())
+                .ToList();
+        }
 
-                Globals.IpStart = txt_IpStart.Text;
-                Globals.IpEnd = txt_IpEnd.Text;
-            }
-            catch (Exception e)
+        private List<IpRange> GetIpRanges()
+        {
+            List<IpRange> ipRanges = new List<IpRange>();
+
+            //Leo CSV con datos de Ips de Argentina
+            using (var reader = new StreamReader(@"Resources\ip_range_argentina.csv"))
             {
-                log.Info(e.ToString());                
+                reader.ReadLine(); //Leo encabezado
+
+                //Leo el resto de la tabla
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    string[] values = line.Split(';');
+
+                    ipRanges.Add(new IpRange()
+                    {
+                        IpBegin = new IpAddress(values[0]),
+                        IpEnd = new IpAddress(values[1]),
+                    });
+                }
             }
-            
+
+            return ipRanges;
+        }
+
+        private void SaveConfiguration()
+        {
+            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+            //Guardo datos introducidos en los textinput
+            config.AppSettings.Settings["IpStart"].Value = txt_IpStart.Text;
+            config.AppSettings.Settings["IpEnd"].Value = txt_IpEnd.Text;
         }        
+
+        private void LoadConfiguration()
+        {
+            //Tomo los datos guardados y los muestro en los textinput
+            txt_IpStart.Text = ConfigurationManager.AppSettings["IpStart"];
+            txt_IpEnd.Text = ConfigurationManager.AppSettings["IpEnd"];
+        }
 
         private void btnTcpConnections_Click(object sender, RoutedEventArgs e)
         {
@@ -264,125 +304,6 @@ namespace WpfApplication1
 
         }
 
-        private void btn_RescanExistingCams_Click(object sender, RoutedEventArgs e)
-        {
-            string FolderPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            
-            try
-            {                
-                foreach (string filePath in Directory.EnumerateFiles(FolderPath, "*.txt"))
-                {
-                    string FileName = System.IO.Path.GetFileNameWithoutExtension(filePath); 
-                    switch (FileName)
-                    {
-                        case "vivotek":
-                            Console.WriteLine("vivotek");
-                            break;
-                        case "defeway":
-                            Console.WriteLine("defeway");
-                            RescanDefeway(filePath);
-                            break;                        
-                        case "newvision":
-                            Console.WriteLine("Case 2");
-                            RescanNewvision(filePath);
-                            break;
-                        case "tplink":
-                            Console.WriteLine("Case 2");
-                            break;
-                        case "bosch":
-                            Console.WriteLine("Case 2");
-                            break;
-                        default:
-                            Console.WriteLine("Camara no la tuve en cuenta jaja");
-                            break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);                
-            }
-        }
-
-        private void RescanDefeway(string FilePath)
-        {
-            string[] lines = File.ReadAllLines(FilePath);
-
-            List<string> OldCamaras = new List<string>();
-            foreach (string camara in lines)
-            {
-                OldCamaras.Add(camara);
-            }
-            foreach (var OldCam in OldCamaras)
-            {
-                string fileNameDefeway = "defeway-old.txt";
-                using (StreamWriter txt = new StreamWriter(fileNameDefeway, true))
-                {
-                    txt.WriteLine(OldCam);
-                }
-            }
-            
-            List<string> CamarasFiltradas = new List<string>();
-
-            foreach (string ip in lines)
-            {
-                if (ip != null & ip.Length > 1)
-                {
-                    try
-                    {
-                        string URL = "http://" + ip + "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1";
-                        HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(URL);
-                        //request.Credentials = new NetworkCredential("admin", "admin");
-                        request.Timeout = 6000;
-                        request.AllowAutoRedirect = false;
-                        string Jpeg = "image/jpeg";
-
-                        try
-                        {
-                            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-                            if (response.StatusCode == HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
-                            {
-                                Console.WriteLine(ip);
-                                Console.WriteLine("Content leght: " + response.ContentLength);
-                                CamarasFiltradas.Add(ip);
-                            }
-                            else
-                            {
-                                Console.WriteLine(ip + " No xiste una camara");
-                            }
-
-                        }
-                        catch (Exception ee)
-                        {
-                            Console.WriteLine("Error: " + ip + " " + ee.Message);
-                        }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ip + ex.Message);
-                    }
-                }
-            }
-
-            //Borro todo el contenido delegate archivo
-            File.WriteAllText(FilePath, String.Empty);
-
-            //Guardo las CamarasFiltradas filtradas
-            foreach (var ip in CamarasFiltradas)
-	        {		
-                string fileNameDefeway = "defeway.txt";
-                using (StreamWriter txt = new StreamWriter(fileNameDefeway, true))
-                {
-                    txt.WriteLine(ip);
-                }
-	        }
-
-            Console.WriteLine("FIN");
-            
-        }
-
         private void RescanSavedCameras(string filePath)
         {
             string[] lines = File.ReadAllLines(filePath);
@@ -395,85 +316,7 @@ namespace WpfApplication1
             new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanList(lines)).Start();
 
         }
-
-        private void RescanNewvision(string FilePath)
-        {
-            string[] lines = File.ReadAllLines(FilePath);
-
-            List<string> OldCamaras = new List<string>();
-            foreach (string camara in lines)
-            {
-                OldCamaras.Add(camara);
-            }
-            foreach (var OldCam in OldCamaras)
-            {
-                string fileNameDefeway = "newvision-old.txt";
-                using (StreamWriter txt = new StreamWriter(fileNameDefeway, true))
-                {
-                    txt.WriteLine(OldCam);
-                }
-            }
-            
-            List<string> CamarasFiltradas = new List<string>();
-
-            foreach (string ip in lines)
-            {
-                if (ip != null & ip.Length > 1)
-                {
-                    try
-                    {
-                        string URL = "http://" + ip + "/tmpfs/auto.jpg";
-                        HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(URL);
-                        request.Credentials = new NetworkCredential("admin", "admin");
-                        request.Timeout = 4000;
-                        request.AllowAutoRedirect = false;
-                        string Jpeg = "image/jpeg";
-
-                        try
-                        {
-                            HttpWebResponse response = (HttpWebResponse)request.GetResponse();                            
-                            
-                            if (response.StatusCode == HttpStatusCode.OK && response.ContentType == Jpeg && response.ContentLength > 0)
-                            {
-                                Console.WriteLine(ip);
-                                Console.WriteLine("Content leght: " + response.ContentLength);
-                                CamarasFiltradas.Add(ip);                                
-                            }
-                            else
-                            {
-                                Console.WriteLine(ip + " No xiste una camara");
-                            }
-
-                        }
-                        catch (Exception ee)
-                        {
-                            Console.WriteLine("Error: " + ip + " " + ee.Message);
-                        }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ip + ex.Message);
-                    }
-                }
-            }
-
-            //Borro todo el contenido delegate archivo
-            File.WriteAllText(FilePath, String.Empty);
-
-            //Guardo las CamarasFiltradas filtradas
-            foreach (var ip in CamarasFiltradas)
-	        {		
-                string fileNameDefeway = "newvision.txt";
-                using (StreamWriter txt = new StreamWriter(fileNameDefeway, true))
-                {
-                    txt.WriteLine(ip);
-                }
-	        }
-
-            Console.WriteLine("FIN");
-        }        
-
+        
         private void btnReadData_Click(object sender, RoutedEventArgs e)
         {
             var ipRange = GetIpRanges()[0];
@@ -486,36 +329,10 @@ namespace WpfApplication1
             //}
         }
 
-        private List<IpRange> GetIpRanges()
-        {
-            List<IpRange> ipRanges = new List<IpRange>();
-
-            //Leo CSV con datos de Ips de Argentina
-            using (var reader = new StreamReader(@"Resources\ip_range_argentina.csv"))
-            {
-                reader.ReadLine(); //Leo encabezado
-
-                //Leo el resto de la tabla
-                while (!reader.EndOfStream)
-                {
-                    string  line = reader.ReadLine();
-                    string[] values = line.Split(';');
-
-                    ipRanges.Add(new IpRange()
-                    {
-                        IpBegin = new IpAddress(values[0]),
-                        IpEnd = new IpAddress(values[1]),
-                    }) ;
-                }
-            }
-
-            return ipRanges;
-        }
-
         private void btnAsyncScan_Click(object sender, RoutedEventArgs e)
         {            
             //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin")).RunAsync()).Start();
-            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1").AsyncScanFrom("152.168.0.0")).Start();
+            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1").AsyncScanFrom(new IpAddress("152.168.0.0"))).Start();
         }
 
         private void btnScanRange_Click(object sender, RoutedEventArgs e)
