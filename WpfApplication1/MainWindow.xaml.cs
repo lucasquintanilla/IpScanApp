@@ -1,34 +1,19 @@
-﻿using System;
+﻿using IpScanApp.Clases;
+using IpScanApp.Classes;
+using SnmpSharpNet;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Net;
-using System.Threading;
-using IpScanApp.Clases;
-using SnmpSharpNet;
-using RestSharp;
 using System.Net.NetworkInformation;
-using System.Configuration;
-using System.Drawing;
-using IpScanApp.Classes;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows;
 
 namespace WpfApplication1
 {
-    #region Classes
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -42,10 +27,6 @@ namespace WpfApplication1
         
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
                 
-         
-
-              
-                        
         private void FilterIp(string ip)
         {
             try
@@ -283,8 +264,6 @@ namespace WpfApplication1
 
         }
 
-        
-
         private void btn_RescanExistingCams_Click(object sender, RoutedEventArgs e)
         {
             string FolderPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
@@ -506,6 +485,7 @@ namespace WpfApplication1
             //    new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
             //}
         }
+
         private List<IpRange> GetIpRanges()
         {
             List<IpRange> ipRanges = new List<IpRange>();
@@ -548,6 +528,4 @@ namespace WpfApplication1
             RescanSavedCameras("newvision.txt");
         }
     }
-    
-    #endregion
 }
