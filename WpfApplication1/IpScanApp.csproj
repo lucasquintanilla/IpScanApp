@@ -79,16 +79,17 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Clases\Bot.cs" />
-    <Compile Include="Clases\Globals.cs" />
-    <Compile Include="Clases\Manufacturer.cs" />
+    <Compile Include="Classes\Bot.cs" />
+    <Compile Include="Classes\Globals.cs" />
+    <Compile Include="Classes\IpRange.cs" />
+    <Compile Include="Classes\Manufacturer.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Clases\Parallel.cs" />
+    <Compile Include="Classes\Parallel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -115,7 +116,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-    <None Include="Resources\ip_range_argentina.csv" />
+    <None Include="Resources\ip_range_argentina.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\ip_range_argentina.xlsx" />
   </ItemGroup>
   <ItemGroup>

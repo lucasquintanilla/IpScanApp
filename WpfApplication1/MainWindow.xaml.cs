@@ -24,6 +24,7 @@ using RestSharp;
 using System.Net.NetworkInformation;
 using System.Configuration;
 using System.Drawing;
+using IpScanApp.Classes;
 
 namespace WpfApplication1
 {
@@ -38,17 +39,12 @@ namespace WpfApplication1
             txt_IpStart.Text = ConfigurationManager.AppSettings["IpStart"];
             txt_IpEnd.Text = ConfigurationManager.AppSettings["IpEnd"];
         }        
-
-        #region Constants
-
+        
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+                
+         
 
-        public bool stop = false;
-        public string IpAddress { get; set; }      
-
-        #endregion
-
-        #region Private Methods        
+              
                         
         private void FilterIp(string ip)
         {
@@ -249,24 +245,7 @@ namespace WpfApplication1
                     txt.WriteLine(ip);
                 }
             }
-        }
-
-        public Thread thBotDefeway { get; set; }
-        public Thread thBotDefeway60001 { get; set; }
-        public Thread thBotNewvision { get; set; }
-        public Thread thBotVivotek { get; set; }
-        public Thread thBotVivotek81 { get; set; }
-        public Thread thBotVivotek8080 { get; set; }
-        public Thread thBotVivotek8081 { get; set; }
-        public Thread thBotTpLink { get; set; }
-
-        public Thread thBotDefewayUpdate { get; set; }
-        public Thread thBotDefeway60001Update { get; set; }
-        public Thread thBotNewvisionUpdate { get; set; }
-        public Thread thBotVivotekUpdate { get; set; }
-        public Thread thBotVivotek81Update { get; set; }
-        public Thread thBotVivotek8080Update { get; set; }
-        public Thread thBotVivotek8081Update { get; set; }
+        }                
 
         private void SetConfiguration()
         {
@@ -286,92 +265,7 @@ namespace WpfApplication1
                 log.Info(e.ToString());                
             }
             
-        }
-
-        private void btnStart_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                log.Info("Start...");
-                btnStart.IsEnabled = false;
-
-                SetConfiguration();
-
-                Bot BotDefeway = new Bot();
-                BotDefeway.Manufacturer = Defeway.Name;
-                BotDefeway.Query = Defeway.Query;
-                thBotDefeway = new Thread(new ThreadStart(BotDefeway.Run));
-                thBotDefeway.Start();
-                //thBotDefewayUpdate = new Thread(new ThreadStart(BotDefeway.Update));
-                //thBotDefewayUpdate.Start();
-
-                Bot BotDefeway60001 = new Bot();
-                BotDefeway60001.Port = 60001;
-                BotDefeway60001.Manufacturer = Defeway.Name;
-                BotDefeway60001.Query = Defeway.Query;
-                thBotDefeway60001 = new Thread(new ThreadStart(BotDefeway60001.Run));
-                thBotDefeway60001.Start();
-                //thBotDefeway60001Update = new Thread(new ThreadStart(BotDefeway60001.Update));
-                //thBotDefeway60001Update.Start();
-
-                Bot BotNewvision = new Bot();
-                BotNewvision.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  
-                BotNewvision.Manufacturer = Newvision.Name;
-                BotNewvision.Query = Newvision.Query;
-                thBotNewvision = new Thread(new ThreadStart(BotNewvision.Run));
-                thBotNewvision.Start();
-                //thBotNewvisionUpdate = new Thread(new ThreadStart(BotNewvision.Update));
-                //thBotNewvisionUpdate.Start();
-
-                Bot BotVivotek = new Bot();
-                BotVivotek.Manufacturer = Vivotek.Name;
-                BotVivotek.Query = Vivotek.Query;
-                thBotVivotek = new Thread(new ThreadStart(BotVivotek.Run));
-                thBotVivotek.Start();
-                //thBotVivotekUpdate = new Thread(new ThreadStart(BotVivotek.Update));
-                //thBotVivotekUpdate.Start();
-
-                Bot BotVivotek81 = new Bot();
-                BotVivotek81.Port = 81;
-                BotVivotek81.Manufacturer = Vivotek.Name;
-                BotVivotek81.Query = Vivotek.Query;
-                thBotVivotek81 = new Thread(new ThreadStart(BotVivotek81.Run));
-                thBotVivotek81.Start();
-                //thBotVivotek81Update = new Thread(new ThreadStart(BotVivotek81.Update));
-                //thBotVivotek81Update.Start();
-
-                Bot BotVivotek8080 = new Bot();
-                BotVivotek8080.Port = 8080;
-                BotVivotek8080.Manufacturer = Vivotek.Name;
-                BotVivotek8080.Query = Vivotek.Query;
-                thBotVivotek8080 = new Thread(new ThreadStart(BotVivotek8080.Run));
-                thBotVivotek8080.Start();
-                //thBotVivotek8080Update = new Thread(new ThreadStart(BotVivotek8080.Update));
-                //thBotVivotek8080Update.Start();
-
-                Bot BotVivotek8081 = new Bot();
-                BotVivotek8081.Port = 8081;
-                BotVivotek8081.Manufacturer = Vivotek.Name;
-                BotVivotek8081.Query = Vivotek.Query;
-                thBotVivotek8081 = new Thread(new ThreadStart(BotVivotek8081.Run));
-                thBotVivotek8081.Start();
-                //thBotVivotek8081Update = new Thread(new ThreadStart(BotVivotek8081.Update));
-                //thBotVivotek8081Update.Start();
-
-                Bot BotTpLink = new Bot();
-                BotTpLink.Manufacturer = "tplink";
-                BotTpLink.Query = "/jpg/image.jpg";
-                thBotTpLink = new Thread(new ThreadStart(BotTpLink.Run));
-                thBotTpLink.Start();
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                log.Error(ex.ToString());
-                //throw;
-            }
-        }
+        }        
 
         private void btnTcpConnections_Click(object sender, RoutedEventArgs e)
         {
@@ -389,7 +283,7 @@ namespace WpfApplication1
 
         }
 
-        #endregion
+        
 
         private void btn_RescanExistingCams_Click(object sender, RoutedEventArgs e)
         {
@@ -429,7 +323,6 @@ namespace WpfApplication1
             {
                 Console.WriteLine(ex);                
             }
-            
         }
 
         private void RescanDefeway(string FilePath)
@@ -511,6 +404,19 @@ namespace WpfApplication1
             
         }
 
+        private void RescanSavedCameras(string filePath)
+        {
+            string[] lines = File.ReadAllLines(filePath);
+
+            FileStream fileStream = File.Open(filePath, FileMode.Open);
+            fileStream.SetLength(0);
+            fileStream.Close();
+
+            //new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1", 60001).ScanList(lines)).Start();
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanList(lines)).Start();
+
+        }
+
         private void RescanNewvision(string FilePath)
         {
             string[] lines = File.ReadAllLines(FilePath);
@@ -587,75 +493,61 @@ namespace WpfApplication1
 	        }
 
             Console.WriteLine("FIN");
+        }        
+
+        private void btnReadData_Click(object sender, RoutedEventArgs e)
+        {
+            var ipRange = GetIpRanges()[0];
+
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
+
+            //foreach (var ipRange in GetIpRanges())
+            //{
+            //    new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
+            //}
+        }
+        private List<IpRange> GetIpRanges()
+        {
+            List<IpRange> ipRanges = new List<IpRange>();
+
+            //Leo CSV con datos de Ips de Argentina
+            using (var reader = new StreamReader(@"Resources\ip_range_argentina.csv"))
+            {
+                reader.ReadLine(); //Leo encabezado
+
+                //Leo el resto de la tabla
+                while (!reader.EndOfStream)
+                {
+                    string  line = reader.ReadLine();
+                    string[] values = line.Split(';');
+
+                    ipRanges.Add(new IpRange()
+                    {
+                        IpBegin = new IpAddress(values[0]),
+                        IpEnd = new IpAddress(values[1]),
+                    }) ;
+                }
+            }
+
+            return ipRanges;
         }
 
-        private void btn_StartInParallel_Click(object sender, RoutedEventArgs e)
-        {
-            log.Info("Starting In Parallel...");
-            btn_StartInParallel.IsEnabled = false;
-
-            SetConfiguration();
-
-            Bot BotDefeway = new Bot();
-            BotDefeway.Manufacturer = Defeway.Name;
-            BotDefeway.Query = Defeway.Query;
-            thBotDefeway = new Thread(new ThreadStart(BotDefeway.RunInParallel));
-            thBotDefeway.Start();
-
-            Bot BotDefeway60001 = new Bot();
-            BotDefeway60001.Port = 60001;
-            BotDefeway60001.Manufacturer = Defeway.Name;
-            BotDefeway60001.Query = Defeway.Query;
-            thBotDefeway60001 = new Thread(new ThreadStart(BotDefeway60001.RunInParallel));
-            thBotDefeway60001.Start();
-
-            Bot BotNewvision = new Bot();
-            BotNewvision.Credentials = new NetworkCredential("admin", "admin"); //solo newvision  
-            BotNewvision.Manufacturer = Newvision.Name;
-            BotNewvision.Query = Newvision.Query;
-            thBotNewvision = new Thread(new ThreadStart(BotNewvision.RunInParallel));
-            thBotNewvision.Start();
-
-            Bot BotVivotek = new Bot();
-            BotVivotek.Manufacturer = Vivotek.Name;
-            BotVivotek.Query = Vivotek.Query;
-            thBotVivotek = new Thread(new ThreadStart(BotVivotek.RunInParallel));
-            thBotVivotek.Start();
-
-            Bot BotVivotek81 = new Bot();
-            BotVivotek81.Port = 81;
-            BotVivotek81.Manufacturer = Vivotek.Name;
-            BotVivotek81.Query = Vivotek.Query;
-            thBotVivotek81 = new Thread(new ThreadStart(BotVivotek81.RunInParallel));
-            thBotVivotek81.Start();
-
-            Bot BotVivotek8080 = new Bot();
-            BotVivotek8080.Port = 8080;
-            BotVivotek8080.Manufacturer = Vivotek.Name;
-            BotVivotek8080.Query = Vivotek.Query;
-            thBotVivotek8080 = new Thread(new ThreadStart(BotVivotek8080.RunInParallel));
-            thBotVivotek8080.Start();
-
-            Bot BotVivotek8081 = new Bot();
-            BotVivotek8081.Port = 8081;
-            BotVivotek8081.Manufacturer = Vivotek.Name;
-            BotVivotek8081.Query = Vivotek.Query;
-            thBotVivotek8081 = new Thread(new ThreadStart(BotVivotek8081.RunInParallel));
-            thBotVivotek8081.Start();
-
-            //Bot BotTpLink = new Bot();
-            //BotTpLink.Manufacturer = "tplink";
-            //BotTpLink.Query = "/jpg/image.jpg?157395";
-            //thBotTpLink = new Thread(new ThreadStart(BotTpLink.Run));
-            //thBotTpLink.Start();
+        private void btnAsyncScan_Click(object sender, RoutedEventArgs e)
+        {            
+            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin")).RunAsync()).Start();
+            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1").AsyncScanFrom("152.168.0.0")).Start();
         }
 
-        private void BtnAsyncNewvision_Click(object sender, RoutedEventArgs e)
+        private void btnScanRange_Click(object sender, RoutedEventArgs e)
+        {            
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255"))).Start();
+        }
+
+        private void btnScanSavedCameras_Click(object sender, RoutedEventArgs e)
         {
-            SetConfiguration();
-            new Thread(() => new Bot().RunAsyncNewvision()).Start();
+            RescanSavedCameras("newvision.txt");
         }
     }
-
+    
     #endregion
 }
