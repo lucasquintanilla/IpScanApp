@@ -1,6 +1,6 @@
 ﻿using SnmpSharpNet;
 
-namespace IpScanApp.Classes
+namespace IpScanLibrary.Models
 {
     public class IpRange
     {

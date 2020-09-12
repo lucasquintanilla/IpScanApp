@@ -1,9 +1,4 @@
-﻿using IpScanApp.Clases;
-using IpScanApp.Classes;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using SnmpSharpNet;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -15,6 +10,11 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
+using IpScanLibrary;
+using IpScanLibrary.Models;
+using SnmpSharpNet;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace WpfApplication1
 {
@@ -23,11 +23,9 @@ namespace WpfApplication1
         public MainWindow()
         {
             InitializeComponent();
-
-            LoadConfiguration();
         }        
         
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        //private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
                 
         private void ClassifyIp(string ip)
         {
@@ -328,7 +326,7 @@ namespace WpfApplication1
             fileStream.Close();
 
             //new Thread(() => new Bot("defeway", "/cgi-bin/snapshot.cgi?chn=0&u=admin&p=&q=1", 60001).ScanList(lines)).Start();
-            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanList(lines)).Start();
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin")).ScanList(lines)).Start();
 
         }
 
@@ -336,7 +334,7 @@ namespace WpfApplication1
         {
             foreach (var ipRange in GetIpRanges())
             {
-                new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin").ScanRangeAsync(ipRange.IpBegin, ipRange.IpEnd);
+                new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin")).ScanRangeAsync(ipRange.IpBegin, ipRange.IpEnd);
             }
         }
         
@@ -357,9 +355,23 @@ namespace WpfApplication1
             //    .ScanRangeAsync(new IpAddress("152.170.0.0"), new IpAddress("152.170.255.255"), 60001))
             //    .Start();
 
-            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
-                .ScanRangeAsync(new IpAddress("152.170.0.0"), new IpAddress("152.170.255.255")))
-                .Start();
+            Action<object> action = (object obj) =>
+            {
+                Console.WriteLine("Task={0}, obj={1}, Thread={2}",
+                Task.CurrentId, obj,
+                Thread.CurrentThread.ManagedThreadId);
+
+                new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin"))
+                .ScanRangeAsync(new IpAddress("152.169.0.0"), new IpAddress("152.170.0.0"));
+            };
+
+
+            Task t1 = new Task(action, "hola");
+            t1.Start();
+
+            //new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
+            //    .ScanRangeAsync(new IpAddress("152.170.0.0"), new IpAddress("152.170.255.255")))
+            //    .Start();
         }
 
         private void btnScanSavedCameras_Click(object sender, RoutedEventArgs e)
@@ -371,7 +383,7 @@ namespace WpfApplication1
         {
             int[] ports = new int[]{ 81, 82, 83 };
 
-            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", "admin", "admin")
+            new Thread(() => new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin"))
                 .DeepScan(ports))
                 .Start();
         }
@@ -444,7 +456,7 @@ namespace WpfApplication1
         {
             foreach (var manufacturer in GetManufacturers())
             {
-                new Bot(manufacturer.Name, manufacturer.Uri , "admin", "admin")
+                new Bot(manufacturer.Name, manufacturer.Uri, new NetworkCredential("admin", "admin"))
                 .TryHack("186.147.241.108");
 
                 //new Thread(() => new Bot(manufacturer.Name, manufacturer.Uri)
@@ -458,6 +470,11 @@ namespace WpfApplication1
             new Thread(() => new Bot().ScanAllRangeWithClassifierAsync(new IpAddress("152.170.0.0"), 
                 new IpAddress("152.170.255.255")))
                 .Start();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadConfiguration();
         }
     }
 }

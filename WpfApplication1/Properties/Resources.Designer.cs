@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace IpScanApp.Properties {
+namespace IpScanLibrary.Properties {
     using System;
     
     
