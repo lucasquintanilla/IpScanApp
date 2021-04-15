@@ -27,7 +27,7 @@
             <Button x:Name="btnCheckOpenPorts" Content="Check Open Ports" Click="btnCheckOpenPorts_Click"/>
             <Button x:Name="btnTryHack" Content="TryHack" Click="btnTryHack_Click"/>
             <Button x:Name="btnClassifier" Content="Classifier" Click="btnClassifier_Click"/>
-
+            <Button x:Name="btnTestDatabase" Content="Classifier" Click="btnTestDatabase_Click" />
         </StackPanel>
         </Grid>
 </Window>

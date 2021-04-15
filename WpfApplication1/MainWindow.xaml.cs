@@ -12,6 +12,7 @@ using System.Threading;
 using System.Windows;
 using IpScanLibrary;
 using IpScanLibrary.Models;
+using IpScanLibrary.Services;
 using SnmpSharpNet;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
@@ -362,7 +363,7 @@ namespace WpfApplication1
                 Thread.CurrentThread.ManagedThreadId);
 
                 new Bot("newvision", "/tmpfs/auto.jpg", new NetworkCredential("admin", "admin"))
-                .ScanRangeAsync(new IpAddress("152.169.0.0"), new IpAddress("152.170.0.0"));
+                .ScanRangeAsync(new IpAddress("152.168.0.0"), new IpAddress("152.170.0.0"));
             };
 
 
@@ -475,6 +476,28 @@ namespace WpfApplication1
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoadConfiguration();
+        }
+
+        private void btnTestDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var db = new Database();
+                //string connetionString = @"Data Source=RAUL-WORK\A1SQLEXPRESS;Initial Catalog=A1MobileAccess;User ID=sa;Password=Alsina911";
+                string connetionString = @"Data Source=DESKTOP-UCLS98C\SQLEXPRESS,1433;Initial Catalog=IpCameras;User ID=sa;Password=Alsina911";
+
+                db.Connect(connetionString);
+                db.InsertNew();
+            }
+            catch (Exception)
+            {
+
+                //throw;
+            }
+            
+
+
+
         }
     }
 }
